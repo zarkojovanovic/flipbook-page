@@ -1,0 +1,289 @@
+<!doctype html>
+<!--[if lt IE 7 ]> <html lang="en" class="ie6"> <![endif]-->
+<!--[if IE 7 ]>    <html lang="en" class="ie7"> <![endif]-->
+<!--[if IE 8 ]>    <html lang="en" class="ie8"> <![endif]-->
+<!--[if IE 9 ]>    <html lang="en" class="ie9"> <![endif]-->
+<!--[if !IE]><!-->
+<html lang="en">
+<!--<![endif]-->
+
+<head>
+	<meta name="viewport" content="width = 1050, user-scalable = no" />
+
+
+	<script type="text/javascript" src="../../extras/jquery.min.1.7.js"></script>
+	<script type="text/javascript" src="../../extras/modernizr.2.5.3.min.js"></script>
+	<script type="text/javascript" src="../../extras/jquery-ui-1.8.20.custom.min.js"></script>
+	<script type="text/javascript" src="../../lib/hash.js"></script>
+	<script type="text/javascript" src="../../lib/scissor.min.js"></script>
+
+
+
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
+	<link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+
+</head>
+
+<body>
+
+
+	<div class="flipbook-viewport" id="book-viewport">
+
+		<button type="button" class="btn btn-default" id="prev"><i class="fas fa-angle-left left-icon"></i></button>
+		<button type="button" class="btn btn-default" id="next"><i class="fas fa-angle-right right-icon"></i></button>
+		<div class="fullscreen">
+			<button type="button" class="btn btn-default" id="fullscreen">Fullscreen</button>
+
+		</div>
+		<div class="pagination">
+			<div class="left-page">
+				Back cover
+			</div>
+			<div class="right-page">
+				Front cover
+			</div>
+		</div>
+
+		<div class="container-book">
+
+			<div class="flipbook" id="book">
+
+				<!-- Pages goes here -->
+			</div>
+
+		</div>
+	</div>
+
+	<div class="bottom horizontal-scroll">
+		<div class="up-down">
+			<button type="button" class="btn btn-default" id="up" onclick="up()"><i class="fas fa-angle-up up-icon "></i></button>
+			<button type="button" class="btn btn-default" id="down" onclick="down()"><i class="fas fa-angle-down down-icon"></i></button>
+		</div>
+		<div class="img-thumbnail">
+			<!-- Thumbnails goes here -->
+		</div>
+	</div>
+
+	</div>
+
+
+
+
+	<script type="text/javascript">
+		var book = '';
+		var thisPage = 2;
+
+
+		function loadApp() {
+
+			var flipbook = $('.flipbook');
+			// Check if the CSS was already loaded
+
+			if (flipbook.width() == 0 || flipbook.height() == 0) {
+				setTimeout(loadApp, 10);
+				return;
+			}
+
+			// Create the flipbook
+
+			$('.flipbook').turn({
+
+				// Starting page
+				page: 2,
+
+				// Duration
+
+				duration: 1000,
+				// Enable gradients
+
+				gradients: false,
+
+				// Auto center this flipbook
+
+				autoCenter: true,
+
+				// Full number of pages
+				pages: 107,
+
+				when: {
+
+
+
+					turning: function(event, page, view) {
+
+
+						if (page === 1) {
+							$(".flipbook").bind("first", function(event) {
+								e.preventDefault();
+							});
+
+						} else if (page === 2 || page === 3) {
+							document.getElementsByClassName("left-page")[0].textContent = 'Back cover';
+							document.getElementsByClassName("right-page")[0].textContent = 'Front cover';
+						} else if (page % 2 == 0) {
+							document.getElementsByClassName("left-page")[0].textContent = page - 3;
+							document.getElementsByClassName("right-page")[0].textContent = page - 2;
+						} else {
+							document.getElementsByClassName("left-page")[0].textContent = page - 4;
+							document.getElementsByClassName("right-page")[0].textContent = page - 3;
+
+						}
+						document.getElementsByClassName("left-page")[0].style.color = "red";
+						document.getElementsByClassName("right-page")[0].style.color = "red";
+
+
+						var book = $(this),
+							currentPage = book.turn('page'),
+							pages = book.turn('pages');
+
+						// Update the current URI
+
+						Hash.go('page/' + page).update();
+						thisPage = page;
+						var page = document.getElementsByClassName('page');
+
+					},
+					turned: function(event, page, view) {
+						$(this).turn('center');
+						document.getElementsByClassName("left-page")[0].style.color = "black";
+						document.getElementsByClassName("right-page")[0].style.color = "black";
+
+
+					},
+
+					missing: function(event, pages) {
+
+						// Add pages that aren't in the flipbook
+						for (var i = 0; i < pages.length; i++) {
+							addPage(pages[i], $(this));
+						}
+
+					}
+
+				}
+
+			});
+
+			loadThumbnails();
+		}
+		$("#book").hover(function() {
+			$('.flipbook').turn('disable', true);
+		}, function() {
+			$('.flipbook').turn('disable', false);
+		});
+
+		$(window).resize(function() {
+			book,
+			resizeViewport();
+		}).bind('orientationchange', function() {
+			book,
+			resizeViewport();
+		});
+
+
+		$("#fullscreen").click(function(e) {
+			var text = document.getElementById("fullscreen").textContent;
+			if (text === "Fullscreen") {
+				var text = document.getElementById("fullscreen").textContent = "Exit fullscreen";
+
+				var el = document.getElementById("book-viewport");
+
+				var rfs = el.requestFullscreen ||
+					el.webkitRequestFullScreen ||
+					el.mozRequestFullScreen ||
+					el.msRequestFullscreen;
+
+				rfs.call(el);
+
+				book = '';
+				resizeViewport();
+			} else {
+				document.exitFullscreen();
+				down();
+				book = '';
+				resizeViewport();
+				var text = document.getElementById("fullscreen").textContent = "Fullscreen";
+			}
+
+		});
+
+		$('#prev').click(function(e) {
+
+			$('.flipbook').turn('previous');
+
+			var secondPage = $('.flipbook').turn('page');
+			var firstPage = secondPage + 1;
+
+			pageBrighten(firstPage, secondPage);
+
+
+		});
+
+		$('#next').click(function(e) {
+
+			$('.flipbook').turn('next');
+
+			var secondPage = $('.flipbook').turn('page');
+			var firstPage = secondPage - 1;
+
+			pageBrighten(firstPage, secondPage);
+		});
+
+		function loadThumbnails() {
+
+			var pages = $(".flipbook").turn("pages");
+			var element = document.getElementsByClassName("img-thumbnail");
+			for (var i = 2; i < pages + 1; i++) {
+				var img = document.createElement('img');
+				img.setAttribute("src", "pages/" + i + ".png");
+				img.setAttribute("class", "single-image");
+				img.setAttribute("onclick", "show(" + i + "," + thisPage + ")");
+				element[0].appendChild(img);
+
+			}
+			down();
+		}
+
+		function show(i) {
+			var secondPage = 0;
+			var firstPage = 0;
+
+			if (thisPage < i) {
+				if (thisPage % 2 === 0) {
+					firstPage = thisPage + 1;
+				} else firstPage = thisPage;
+				if (i % 2 === 0) {
+					secondPage = i;
+				} else secondPage = i - 1;
+			}
+
+			if (thisPage > i) {
+
+				if (thisPage % 2 === 0) {
+					firstPage = thisPage;
+				} else
+					firstPage = thisPage - 1;
+
+				if (i % 2 === 0) {
+					secondPage = i + 1;
+				} else
+					secondPage = i;
+			}
+			$('.flipbook').turn("page", i);
+			pageBrighten(firstPage, secondPage);
+		}
+
+		yepnope({
+			test: Modernizr.csstransforms,
+			yep: ['../../lib/turn.min.js'],
+			nope: ['../../lib/turn.html4.min.js', 'css/jquery.ui.html4.css'],
+			both: ['../../lib/scissor.min.js', 'css/flipbook.css', 'css/jquery.ui.css', 'js/flipbook.js'],
+			complete: loadApp
+		});
+	</script>
+
+
+</body>
+
+</html>
